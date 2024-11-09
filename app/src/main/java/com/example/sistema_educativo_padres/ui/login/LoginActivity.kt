@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.sistema_educativo_padres.MainActivity
 import com.example.sistema_educativo_padres.R
+import com.example.sistema_educativo_padres.data.Padre
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -16,12 +17,21 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.UserProfileChangeRequest
+import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
+import java.io.IOException
 
 @Suppress("DEPRECATION")
 class LoginActivity : AppCompatActivity() {
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var firebaseAuth: FirebaseAuth
+
+    private val client = OkHttpClient()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,6 +54,10 @@ class LoginActivity : AppCompatActivity() {
         findViewById<Button>(R.id.loginButton).setOnClickListener {
             signInWithEmail()
         }
+
+        findViewById<Button>(R.id.registerButton).setOnClickListener {
+            registerWithEmail()
+        }
     }
 
     private fun signInWithGoogle() {
@@ -62,9 +76,10 @@ class LoginActivity : AppCompatActivity() {
             firebaseAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
                     Toast.makeText(this, "Inicio de sesión con correo exitoso", Toast.LENGTH_SHORT).show()
-                    val main = Intent(this, MainActivity::class.java)
-                    startActivity(main)
-                    finish()
+                    val user = FirebaseAuth.getInstance().currentUser
+                    if(user != null) {
+                        verifyCurrentUser(user)
+                    }
                 } else {
                     Toast.makeText(this, "Error de inicio de sesión con correo", Toast.LENGTH_SHORT).show()
                 }
@@ -77,17 +92,9 @@ class LoginActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
 
-        val usuarioActual = FirebaseAuth.getInstance().currentUser
-        if(usuarioActual != null) {
-            val user = FirebaseAuth.getInstance().currentUser
-
-            val main = Intent(this, MainActivity::class.java).apply {
-                putExtra("userName", user?.displayName)
-                putExtra("userEmail", user?.email)
-                putExtra("userPhotoUrl", user?.photoUrl.toString())
-            }
-            startActivity(main)
-            finish()
+        val user = FirebaseAuth.getInstance().currentUser
+        if(user != null) {
+            verifyCurrentUser(user)
             return
         }
     }
@@ -115,17 +122,85 @@ class LoginActivity : AppCompatActivity() {
 
                     val user = firebaseAuth.currentUser
 
-                    val main = Intent(this, MainActivity::class.java).apply {
-                        putExtra("userName", user?.displayName)
-                        putExtra("userEmail", user?.email)
-                        putExtra("userPhotoUrl", user?.photoUrl.toString())
+                    if(user != null) {
+                        val padreGoogle = Padre(nombre = cuenta?.displayName ?: "", cuenta?.email ?: "")
+                        savePadreToDatabase(padreGoogle)
                     }
-                    startActivity(main)
-                    finish()
+
+                    if (user != null) {
+                        verifyCurrentUser(user)
+                    }
                 }else {
                     Toast.makeText(this, "Fallo en la autenticación", Toast.LENGTH_SHORT).show()
                 }
             }
+    }
+
+    private fun registerWithEmail() {
+        val userField = findViewById<EditText>(R.id.userText)
+        val emailField = findViewById<EditText>(R.id.emailText)
+        val passwordField = findViewById<EditText>(R.id.passwordText)
+
+        val user = userField.text.toString()
+        val email = emailField.text.toString()
+        val password = passwordField.text.toString()
+
+        if(email.isNotEmpty() && password.isNotEmpty() && user.isNotEmpty()) {
+            firebaseAuth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this) { task ->
+                    if(task.isSuccessful) {
+                        Toast.makeText(this, "Registro exitoso", Toast.LENGTH_SHORT).show()
+
+                        UserProfileChangeRequest.Builder().setDisplayName(user).build()
+
+                        val padre = Padre(nombre = user, email = email)
+                        savePadreToDatabase(padre)
+
+                        val user = FirebaseAuth.getInstance().currentUser
+                        if (user != null) {
+                            verifyCurrentUser(user)
+                        }
+                    }else {
+                        Toast.makeText(this, "Error en el registro", Toast.LENGTH_SHORT).show()
+                    }
+            }
+        }else {
+            Toast.makeText(this, "Por favor, ingrese correo, contraseña y usuario", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun savePadreToDatabase(padre: Padre) {
+        val url = "http://192.168.0.10:8080/escuelaPadres/api/padres"
+        val jsonBody = JSONObject()
+        jsonBody.put("nombre", padre.nombre)
+        jsonBody.put("email", padre.email)
+
+        val requestBody = jsonBody.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        val request = Request.Builder().url(url).post(requestBody).build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onResponse(call: Call, response: Response) {
+                if (response.isSuccessful) {
+                    Log.d("Registro", "Padre registrado en la base de datos")
+                }else {
+                    Log.e("Registro", "Error al registrar en la base de datos")
+                }
+            }
+
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e("Registro", "Fallo en la conexión al servicio REST", e)
+            }
+        })
+    }
+
+    private fun verifyCurrentUser(user: FirebaseUser) {
+        val main = Intent(this, MainActivity::class.java).apply {
+            putExtra("userName", user.displayName)
+            putExtra("userEmail", user.email)
+            putExtra("userPhotoUrl", user.photoUrl.toString())
+        }
+        startActivity(main)
+        finish()
     }
 
     companion object {

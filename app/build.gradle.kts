@@ -54,6 +54,8 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation("com.github.bumptech.glide:glide:4.12.0")
     implementation("jp.wasabeef:glide-transformations:4.3.0")
+    implementation("com.squareup.okhttp3:okhttp:4.9.3")
+    implementation("com.squareup.moshi:moshi:1.12.0")
     implementation(libs.androidx.activity)
     implementation(libs.firebase.auth.ktx)
     testImplementation(libs.junit)

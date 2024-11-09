@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true" >
+    android:fitsSystemWindows="true">
 
     <ImageView
         android:layout_width="wrap_content"
@@ -17,9 +17,19 @@
         android:id="@+id/linearLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="350dp"
+        android:layout_marginTop="300dp"
         android:orientation="vertical"
         app:layout_constraintTop_toTopOf="parent">
+
+        <EditText
+            android:id="@+id/userText"
+            style="@android:style/Widget.TextView"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_margin="15dp"
+            android:autofillHints="emailAddress"
+            android:hint="@string/register_user"
+            android:inputType="textEmailAddress" />
 
         <EditText
             android:id="@+id/emailText"
@@ -52,18 +62,28 @@
     </LinearLayout>
 
     <Button
+        android:id="@+id/registerButton"
+        style="@style/CardView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="25dp"
+        android:text="@string/register_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
+
+    <Button
         android:id="@+id/loginButtonGoogle"
         style="@style/Base.CardView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:layout_marginTop="50dp"
-        android:text="@string/login_google_button"
         android:backgroundTint="@color/red"
         android:drawableLeft="@drawable/ic_google_logo"
         android:drawablePadding="10dp"
+        android:text="@string/login_google_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
+        app:layout_constraintTop_toBottomOf="@+id/registerButton" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
