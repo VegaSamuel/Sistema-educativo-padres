@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.example.sistema_educativo_padres.ui.login
 
 import android.content.Intent
@@ -99,6 +101,7 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -156,9 +159,9 @@ class LoginActivity : AppCompatActivity() {
                         val padre = Padre(nombre = user, email = email)
                         savePadreToDatabase(padre)
 
-                        val user = FirebaseAuth.getInstance().currentUser
-                        if (user != null) {
-                            verifyCurrentUser(user)
+                        val userNow = FirebaseAuth.getInstance().currentUser
+                        if (userNow != null) {
+                            verifyCurrentUser(userNow)
                         }
                     }else {
                         Toast.makeText(this, "Error en el registro", Toast.LENGTH_SHORT).show()

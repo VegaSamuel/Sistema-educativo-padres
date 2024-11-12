@@ -15,6 +15,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.List;
+import seguridad.JWTUtil;
 
 @Path("/padres")
 public class PadresResource {
@@ -53,12 +54,12 @@ public class PadresResource {
         try {
             padres = new PadreDAO();
             Padre existente = padres.obtenPorEmail(padre.getEmail());
-
-            if(existente == null) {
-                Padre nuevo = padres.agregarPadre(padre);
-                return Response.status(Response.Status.CREATED).entity(nuevo).build();
+            
+            if(existente != null) {
+                String token = JWTUtil.generateToken(existente.getNombre());
+                return Response.ok().header("Authorization", "Bearer " + token).entity(existente).build();
             }else {
-                return Response.ok(existente).build();
+                return Response.status(Response.Status.UNAUTHORIZED).entity("No existe tal usuario").build();
             }
         }catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error en el login").build();
@@ -106,7 +107,7 @@ public class PadresResource {
                 return Response.status(Response.Status.NOT_FOUND).build();
             }
         }catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error al obtener al modificar al padre").build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error al modificar al padre").build();
         }finally {
             if(padres != null) {
                 Conexion.cerrarConexion();

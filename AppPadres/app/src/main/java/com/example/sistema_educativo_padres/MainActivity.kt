@@ -1,10 +1,11 @@
+@file:Suppress("DEPRECATION")
+
 package com.example.sistema_educativo_padres
 
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.Menu
-import android.view.MenuItem
 import android.widget.ImageView
 import android.widget.TextView
 import com.google.android.material.snackbar.Snackbar
@@ -25,7 +26,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 
-@Suppress("DEPRECATION")
 class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
